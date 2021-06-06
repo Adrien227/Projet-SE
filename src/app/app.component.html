@@ -1,0 +1,12 @@
+<app-navbar></app-navbar>
+<br>
+<div style="display: flex; flex-grow: grow">
+  <mat-card class="borderSolid">
+    <mat-card-title>Affichage du graphe de précédence</mat-card-title>
+    <br><br>
+    <mat-card-content class="flexContainer">
+    <app-canvas [graph]="graph"></app-canvas>
+    </mat-card-content>
+  </mat-card>
+  <app-graph-form (tasksEventEmitter)="getTasksAndEmit($event)" (graphAtTime)="graphAtTime($event)" [graphForCode]="graph"></app-graph-form>
+</div>

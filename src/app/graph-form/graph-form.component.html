@@ -1,0 +1,118 @@
+
+<mat-horizontal-stepper #stepper linear (selectionChange)="onSelectionChange($event)">
+
+    <mat-step [stepControl]="firstFormGroup">
+      <form [formGroup]="firstFormGroup">
+        <ng-template matStepLabel>Séléctionner les tâches</ng-template>
+        <mat-accordion class="panelStep1" >
+            <mat-expansion-panel *ngIf="firstFormGroup.get('tasks')['controls'].length === 0" #panelTachesVides>
+              <mat-expansion-panel-header>
+                <mat-panel-title>
+                  Aucune tâche créée
+                </mat-panel-title>
+                <mat-panel-description>
+                  Pour ajouter une tâche, cliquez sur le +
+                  <div>
+                    <mat-icon (click)="addTask(panelTachesVides)">add_box</mat-icon>
+                    <mat-icon class="red-icon" matTooltip="Aucune tâche créée">error</mat-icon>
+                  </div>
+                </mat-panel-description>
+              </mat-expansion-panel-header>
+            </mat-expansion-panel>
+              <mat-expansion-panel *ngFor="let tache of firstFormGroup.get('tasks')['controls']; index as i; last as isLast;" #panelTaches>
+                <mat-expansion-panel-header>
+                  <mat-panel-title> {{ tache.value.name }} </mat-panel-title>
+                  <mat-panel-description>
+                    Modifier la tâche "{{ tache.value.name }}"
+                    <div>
+                      <mat-icon *ngIf="isLast" (click)="addTask(panelTaches)">add_box</mat-icon>
+                      <mat-icon (click)="deleteTask(i)">delete</mat-icon>
+                      <mat-icon class="red-icon" *ngIf="tache.invalid">error</mat-icon>
+                    </div>
+                  </mat-panel-description>
+                </mat-expansion-panel-header>
+                <mat-form-field>
+                  <mat-label>Numéro</mat-label>
+                  <input matInput [formControl]="tache.controls.id"/>
+                  <mat-error *ngIf="tache.controls.id.hasError('pattern')">
+                    Le numéro doit être composé uniqument de chiffres.
+                  </mat-error>
+                  <mat-error *ngIf="tache.controls.id.hasError('required')">
+                    Le numéro est obligatoire.
+                  </mat-error>
+                  <mat-error *ngIf="tache.controls.id.hasError('max')">
+                    Le numéro maximum est de 99.
+                  </mat-error>
+                </mat-form-field>
+                <mat-form-field>
+                  <mat-label>Nom</mat-label>
+                  <input matInput [formControl]="tache.controls.name"/>
+                  <mat-error *ngIf="tache.controls.name.hasError('required')">
+                    Le nom est obligatoire.
+                  </mat-error>
+                </mat-form-field>
+                <mat-form-field>
+                  <mat-label>Durée</mat-label>
+                  <input matInput [formControl]="tache.controls.duree"/>
+                  <mat-error *ngIf="tache.controls.duree.hasError('required')">
+                    La durée est obligatoire.
+                  </mat-error>
+                  <mat-error *ngIf="tache.controls.duree.hasError('max')">
+                    La durée maximum est de 99.
+                  </mat-error>
+                  <mat-error *ngIf="tache.controls.duree.hasError('pattern')">
+                    La durée doit être composée uniqument de chiffres.
+                  </mat-error>
+                </mat-form-field>
+              </mat-expansion-panel>
+          </mat-accordion>
+      </form>
+      <div class="buttons">
+        <span *ngIf="firstFormGroup.invalid" class="red-icon">Erreur de saisie detectée </span>
+        <button [disabled]="firstFormGroup.invalid" mat-button mat-stroked-button color="primary" type="submit" matStepperNext >Suivant</button>
+      </div>
+    </mat-step>
+
+    <mat-step [stepControl]="secondFormGroup">
+      <form [formGroup]="secondFormGroup">
+        <ng-template matStepLabel>Ajouter les liaisons</ng-template>
+          <button mat-button mat-stroked-button (click)="addLiaison()" [disabled]="secondFormGroup.invalid">Ajouter une liaison</button>
+          <mat-list class="list">
+            <mat-list-item style="height: 100%" *ngFor="let liaison of secondFormGroup.get('liaisons')['controls']; index as i; last as isLast">
+              <mat-form-field class="margin05">
+                <mat-label>De</mat-label>
+                <mat-select [formControl]="liaison.get('from')" [value]="liaison.get('from').value" >
+                  <mat-option *ngFor="let task of tasks" [value]="task">{{ task.name }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field>
+                <mat-label>Vers</mat-label>
+                <mat-select [formControl]="liaison.get('to')" [value]="liaison.get('to').value" [disabled]="liaison.get('from').value === ''" (selectionChange)="onSelectionChangeLi()">
+                  <mat-option *ngFor="let task of tasks" [value]="task" [disabled]="liaison.get('from').value === task">{{ task.name }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <button mat-icon-button class="buttonDelete" (click)="deleteLiaison(i)">
+                <mat-icon>delete</mat-icon>
+              </button>
+              <mat-divider></mat-divider>
+            </mat-list-item>
+          </mat-list>
+      </form>
+      <div class="buttons">
+        <span *ngIf="secondFormGroup.invalid" class="red-icon">Erreur de saisie detectée </span>
+        <button class="buttonRetourEtape2" mat-button mat-stroked-button color="primary" type="submit" matStepperPrevious >Retour</button>
+        <button [disabled]="secondFormGroup.invalid" mat-button mat-stroked-button color="primary" type="submit" matStepperNext >Suivant</button>
+      </div>
+    </mat-step>
+    <mat-step>
+      <ng-template matStepLabel>Animation</ng-template>
+      <span class="buttonDelete">Temps : {{time}}</span>
+      <mat-slider color="primary" class="slider" tickInterval="auto" thumbLabel [tickInterval]="1" min="0" [max]="getMaxTime()" [value]="time" (valueChange)="graphAtTimeEmit($event)"></mat-slider>
+      <div class="buttons">
+        <span *ngIf="secondFormGroup.invalid" class="red-icon">Erreur de saisie detectée </span>
+        <button class="buttonRetourEtape2" mat-button mat-stroked-button color="primary" type="submit" matStepperPrevious >Retour</button>
+        <button mat-button mat-stroked-button color="primary" (click)="startAnimation()" class="animationB">Lancer l'animation</button>
+      </div>
+    </mat-step>
+
+  </mat-horizontal-stepper>
